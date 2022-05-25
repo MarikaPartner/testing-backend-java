@@ -1,4 +1,4 @@
-package md.homeworks.config;
+package md.homeworks.restassured.config;
 
 import org.aeonbits.owner.Config;
 import org.aeonbits.owner.ConfigFactory;

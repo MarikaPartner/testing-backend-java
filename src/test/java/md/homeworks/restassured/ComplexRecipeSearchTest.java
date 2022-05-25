@@ -1,36 +1,54 @@
-package md.homeworks;
+package md.homeworks.restassured;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.path.json.JsonPath;
-import md.homeworks.extensions.SpoonApiTest;
+import io.restassured.specification.RequestSpecification;
+import io.restassured.specification.ResponseSpecification;
+import md.homeworks.restassured.endpoints.SpoonEndpoints;
+import md.homeworks.restassured.extensions.SpoonApiTest;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import java.util.List;
-import java.util.Map;
 
 @DisplayName("Поиск рецептов")
 @SpoonApiTest
 public class ComplexRecipeSearchTest {
+    private static RequestSpecification requestSpecification;
+    private static ResponseSpecification responseSpecification;
+
+    @BeforeAll
+    static void beforeAll() {
+        requestSpecification = new RequestSpecBuilder()
+                .addQueryParam("offset", 0)
+                .addQueryParam("number", 10)
+                .build();
+        responseSpecification = new ResponseSpecBuilder()
+                .expectStatusCode(200)
+                .expectBody("offset", Matchers.equalTo(0))
+                .expectBody("number", Matchers.equalTo(10))
+                .build();
+    }
 
     @Test
     @DisplayName("Поиск без запроса")
     @Severity(SeverityLevel.CRITICAL)
     public void SearchRecipesHasNotQueryTest() {
         given()
-                .queryParams(Map.of("offset", 0,
-                        "number", 10))
-                .get("/recipes/complexSearch")
+                .spec(requestSpecification)
+                .get(SpoonEndpoints.RECIPE_COMPLEXSEACH.getEndpoint())
                 .then()
-                .statusCode(200)
-                .body("number", Matchers.equalTo(10))
-                .body("offset", Matchers.equalTo(0))
+                .spec(responseSpecification)
                 .body("results", Matchers.hasSize(Matchers.not(0)))
                 .body("results[0]", Matchers.hasKey("id"))
                 .body("results[0]", Matchers.hasKey("title"))
@@ -41,23 +59,19 @@ public class ComplexRecipeSearchTest {
 
     @ParameterizedTest
     @DisplayName("Поиск по запросу: Запрос - слово")
-    @CsvSource(value = {"pizza", "soup"})
+    //@CsvSource(value = {"pizza", "soup"})
+    @CsvSource(value = {"pizza"})
     @Severity(SeverityLevel.CRITICAL)
     public void SearchRecipesQueryIsWordTest(String query) {
-        JsonPath jsonPath = given()
-                .queryParams(Map.of("query", query,
-                        "offset", 0,
-                        "number", 10))
-                .get("/recipes/complexSearch")
+        //JsonPath jsonPath = given()
+                given()
+                .queryParam("query", query)
+                .spec(requestSpecification)
+                .get(SpoonEndpoints.RECIPE_COMPLEXSEACH.getEndpoint())
                 .then()
-                .statusCode(200)
+                .spec(responseSpecification)
                 .body("results", Matchers.hasSize(Matchers.not(0)))
-                .extract()
-                .jsonPath();
-        List<String> recipeTitles = jsonPath.get("results.title");
-        for(String recipeTitle : recipeTitles) {
-            assertThat(recipeTitle.toLowerCase()).contains(query.toLowerCase());
-        }
+                .body("results.title", Matchers.everyItem(Matchers.containsStringIgnoringCase(query)));
     }
 
     @ParameterizedTest
@@ -66,19 +80,37 @@ public class ComplexRecipeSearchTest {
     @Severity(SeverityLevel.CRITICAL)
     public void SearchRecipesQueryIsPhraseTest(String query) {
         JsonPath jsonPath = given()
-                .queryParams(Map.of("query", query,
-                        "offset", 0,
-                        "number", 10))
+                .queryParam("query", query)
+                .spec(requestSpecification)
                 .get("/recipes/complexSearch")
                 .then()
-                .statusCode(200)
+                .spec(responseSpecification)
                 .body("results", Matchers.hasSize(Matchers.not(0)))
+                //.body("results.title", Matchers.everyItem(Matchers.(query)))
                 .extract()
                 .jsonPath();
         List<String> recipeTitles = jsonPath.get("results.title");
         for(String recipeTitle : recipeTitles) {
-            assertThat(recipeTitle.toLowerCase()).containsAnyOf(query.split(" "));
+            assertThat(recipeTitle.toLowerCase()).contains(query.toLowerCase().split(" "));
         }
+    }
+
+    @ParameterizedTest
+    @Disabled
+    @DisplayName("Поиск по запросу: Запрос - фраза")
+    //@CsvSource(value = {"Tomato Soup", "pasta with shrimp"})
+    @CsvSource(value = {"Tomato Soup"})
+    @Severity(SeverityLevel.CRITICAL)
+    public void SearchRecipesQueryIsPhraseTest1(String query) {
+        given()
+                .queryParam("query", query)
+                .spec(requestSpecification)
+                .get(SpoonEndpoints.RECIPE_COMPLEXSEACH.getEndpoint())
+                .then()
+                .spec(responseSpecification)
+                .body("results", Matchers.hasSize(Matchers.not(0)))
+                //.body("results.title".toLowerCase(), Matchers.everyItem(Matchers.contains(query.toLowerCase().split(" "))));
+                .body("results[0].title.toLowerCase()", (Matchers.contains(query.toLowerCase().split(" "))));
     }
 
     @Test
@@ -86,13 +118,12 @@ public class ComplexRecipeSearchTest {
     @Severity(SeverityLevel.NORMAL)
     public void SearchRecipesWithDetailedInformationTest() {
         given()
-                .queryParams(Map.of("offset", 0,
-                        "number", 5,
-                        "addRecipeInformation", true))
-                .get("/recipes/complexSearch")
+                .queryParam("addRecipeInformation", true)
+                .spec(requestSpecification)
+                .get(SpoonEndpoints.RECIPE_COMPLEXSEACH.getEndpoint())
                 .then()
-                .statusCode(200)
-                .body("results[0]", Matchers.hasSize(Matchers.not(0)))
+                .spec(responseSpecification)
+                .body("results", Matchers.hasSize(Matchers.not(0)))
                 .body("results[0]", Matchers.hasKey("vegetarian"))
                 .body("results[0]", Matchers.hasKey("vegan"))
                 .body("results[0]", Matchers.hasKey("glutenFree"))
@@ -125,12 +156,11 @@ public class ComplexRecipeSearchTest {
     @Severity(SeverityLevel.NORMAL)
     public void SearchRecipesWithoutDetailedInformationTest() {
         given()
-                .queryParams(Map.of("offset", 0,
-                        "number", 5,
-                        "addRecipeInformation", false))
-                .get("/recipes/complexSearch")
+                .queryParam("addRecipeInformation", false)
+                .spec(requestSpecification)
+                .get(SpoonEndpoints.RECIPE_COMPLEXSEACH.getEndpoint())
                 .then()
-                .statusCode(200)
+                .spec(responseSpecification)
                 .body("results", Matchers.hasSize(Matchers.not(0)))
                 .body("results[0].size()", Matchers.equalTo(4))
                 .body("results[0]", Matchers.hasKey("id"))

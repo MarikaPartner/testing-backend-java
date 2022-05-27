@@ -14,4 +14,7 @@ public class IngredientsItem {
     @JsonProperty("name")
     private String name;
     private double amount;
+    public IngredientsItem(String name) {
+        this.name = name;
+    }
 }

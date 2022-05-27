@@ -1,5 +1,6 @@
-package md.homeworks.restassured;
+package md.homeworks.restassured.tests;
 
+import com.github.javafaker.Faker;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
 import io.restassured.builder.RequestSpecBuilder;
@@ -41,10 +42,10 @@ public class AddMealToMealPlanTest {
         responseSpecification = new ResponseSpecBuilder()
                 .expectBody("status", Matchers.equalTo("success"))
                 .build();
-
         createUserResponse = new CreateUserResponse();
+
         // Создаём пользователя
-       /* Faker faker = new Faker();
+        Faker faker = new Faker();
         createUserResponse = given()
                 .body(CreateUserRequest.builder()
                                 .username(faker.funnyName().name())
@@ -58,11 +59,8 @@ public class AddMealToMealPlanTest {
                 .extract()
                 .as(CreateUserResponse.class);   // Преобразуем полученный Json в объект класса CreateUserResponse
 
-
-        */
-        createUserResponse.setUsername("preston-aufderhar");
-        createUserResponse.setHash("af927fb67983ba48e613d34c50fbae4da580ef50");
-
+        //createUserResponse.setUsername("preston-aufderhar");
+        //createUserResponse.setHash("af927fb67983ba48e613d34c50fbae4da580ef50");
 
         hashParam = new RequestSpecBuilder()
                 .addQueryParam("hash", createUserResponse.getHash())
@@ -84,6 +82,72 @@ public class AddMealToMealPlanTest {
                 .then()
                 .statusCode(400)
                 .body("message", Matchers.equalTo("No meals planned for that day"));
+    }
+
+    // Тестовые данные
+    public static Stream<AddMealToMealPlanRequest> addMealToMealPlanRequests() {
+        return Stream.of(new AddMealToMealPlanRequest(unixTime, 3, 1, "RECIPE", new Value(636228,1,"Broccoli Tartar", "jpg")),
+                new AddMealToMealPlanRequest(unixTime, 2, 1, "RECIPE", new Value(1096010,1,"Egg Salad Wrap", "jpg")),
+                new AddMealToMealPlanRequest(unixTime, 1, 2, "INGREDIENTS", new Value("1 banana")),
+                new AddMealToMealPlanRequest(unixTime, 3, 1, "INGREDIENTS", new Value("1 orange")),
+                new AddMealToMealPlanRequest(unixTime, 2, 4, "PRODUCT", new Value(878207, 1,"Hot Dang Southwest Burger","jpeg")),
+                new AddMealToMealPlanRequest(unixTime, 1, 1, "PRODUCT", new Value(204593, 1,"Kemps Kemps Select Milk, 1 gl","jpeg")));
+
+        /* Подготовка тестовых данных через builder (заменила из-за громоздкости)
+        return Stream.of(AddMealToMealPlanRequest.builder()
+                        .date(unixTime)
+                        .slot(3)
+                        .position(1)
+                        .type("RECIPE")
+                        .value(Value.builder()
+                                .id(636228)
+                                .servings(1)
+                                .title("Broccoli Tartar")
+                                .imageType("jpg")
+                                .build())
+                        .build(), ...); */
+    }
+
+    @ParameterizedTest
+    @DisplayName("Добавление еды в план питания на определенный день")
+    @MethodSource("addMealToMealPlanRequests")
+    @Severity(SeverityLevel.NORMAL)
+    void addMealToMealPlanTest(AddMealToMealPlanRequest addMealToMealPlanRequest) {
+
+        // Добавляем еду к плану питания
+        addMealToMealPlanResponse = given()
+                .spec(hashParam)
+                .body(addMealToMealPlanRequest)
+                .post(SpoonEndpoints.MEALPLANNER_USERNAME_ITEMS.getEndpoint(), createUserResponse.getUsername())
+                .then()
+                .statusCode(200)
+                .spec(responseSpecification)
+                .extract()
+                .as(AddMealToMealPlanResponse.class);
+
+        // Запрашиваем план питания пользователя на конкретный день
+        getMealPlanResponse = given()
+                .spec(hashParam)
+                .get(SpoonEndpoints.MEALPLANNER_USERNAME_DAY_DATE.getEndpoint(), createUserResponse.getUsername(), date.toString())
+                .prettyPeek()
+                .then()
+                .statusCode(200)
+                .extract()
+                .as(GetMealPlanResponse.class);
+
+        // Проверяем, что добавленная еда присутствует в плане питания
+        assertThat(getMealPlanResponse.getItems().get(0).getId())
+                .isEqualTo(addMealToMealPlanResponse.getId());
+
+        // Проверяем, что добавленная еда находится в нужном слоте и на нужной позиции, имеет соответствующее название
+        SoftAssertions softAssertionsAfter = new SoftAssertions();
+        softAssertionsAfter.assertThat(getMealPlanResponse.getItems().get(0).getSlot())
+                .isEqualTo(addMealToMealPlanRequest.getSlot());
+        softAssertionsAfter.assertThat(getMealPlanResponse.getItems().get(0).getPosition())
+                .isEqualTo(addMealToMealPlanRequest.getPosition());
+        softAssertionsAfter.assertThat(getMealPlanResponse.getItems().get(0).getValue().getTitle())
+                .isEqualTo(addMealToMealPlanRequest.getValue().getTitle());
+        softAssertionsAfter.assertAll();
     }
 
     @ParameterizedTest
@@ -172,85 +236,11 @@ public class AddMealToMealPlanTest {
                         "items.value.title", Matchers.hasItems(title));
     }
 
-    public static Stream<AddMealToMealPlanRequest> addMealToMealPlanRequests() {
-        return Stream.of(AddMealToMealPlanRequest.builder()
-                        .date(unixTime)
-                        .slot(3)
-                        .position(1)
-                        .type("RECIPE")
-                        .value(Value.builder()
-                                .id(636228)
-                                .servings(1)
-                                .title("Broccoli Tartar")
-                                .imageType("jpg")
-                                .build())
-                        .build(),
-                AddMealToMealPlanRequest.builder()
-                        .date(unixTime)
-                        .slot(1)
-                        .position(1)
-                        .type("INGREDIENTS")
-                        .value(Value.builder()
-                                .ingredients(List.of(IngredientsItem.builder()
-                                        .name("1 egg")
-                                        .build()
-                                ))
-                                .servings(1)
-                                .title("Broccoli Tartar")
-                                .imageType("jpg")
-                                .build())
-                        .build());
-    }
-
-    @ParameterizedTest
-    @DisplayName("Добавление еды в план питания на определенный день")
-    @MethodSource("addMealToMealPlanRequests")
-    @Severity(SeverityLevel.NORMAL)
-    void addMealToMealPlanTest(AddMealToMealPlanRequest addMealToMealPlanRequest) {
-
-        // Добавляем еду к плану питания
-        addMealToMealPlanResponse = given()
-                .spec(hashParam)
-                .body(addMealToMealPlanRequest)
-                .post(SpoonEndpoints.MEALPLANNER_USERNAME_ITEMS.getEndpoint(), createUserResponse.getUsername())
-                .then()
-                .statusCode(200)
-                .spec(responseSpecification)
-                .extract()
-                .as(AddMealToMealPlanResponse.class);
-
-        // Запрашиваем план питания пользователя на конкретный день
-        getMealPlanResponse = given()
-                //.contentType(ContentType.JSON)
-                .spec(hashParam)
-                .get(SpoonEndpoints.MEALPLANNER_USERNAME_DAY_DATE.getEndpoint(), createUserResponse.getUsername(), date.toString())
-                .prettyPeek()
-                .then()
-                .statusCode(200)
-                .extract()
-                .as(GetMealPlanResponse.class);
-
-        // Проверяем, что добавленная еда присутствует в плане питания
-        assertThat(getMealPlanResponse.getItems().get(0).getId())
-                .isEqualTo(addMealToMealPlanResponse.getId());
-
-        // Проверяем, что добавленная еда находится в нужном слоте и на нужной позиции, имеет соответствующее название
-        SoftAssertions softAssertionsAfter = new SoftAssertions();
-        softAssertionsAfter.assertThat(getMealPlanResponse.getItems().get(0).getSlot())
-                .isEqualTo(addMealToMealPlanRequest.getSlot());
-        softAssertionsAfter.assertThat(getMealPlanResponse.getItems().get(0).getPosition())
-                .isEqualTo(addMealToMealPlanRequest.getPosition());
-        softAssertionsAfter.assertThat(getMealPlanResponse.getItems().get(0).getValue().getTitle())
-                .isEqualTo(addMealToMealPlanRequest.getValue().getTitle());
-        softAssertionsAfter.assertAll();
-    }
-
     @AfterEach
     void tearDown() {
 
         // Удаляем добавленную еду
         given()
-                //.contentType(ContentType.JSON)
                 .spec(hashParam)
                 .delete(SpoonEndpoints.MEALPLANNER_USERNAME_ITEMS_ID.getEndpoint(), createUserResponse.getUsername(), addMealToMealPlanResponse.getId())
                 .then()

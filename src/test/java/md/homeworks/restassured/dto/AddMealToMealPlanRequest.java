@@ -21,4 +21,11 @@ public class AddMealToMealPlanRequest {
 	private String type;
 	@JsonProperty("value")
 	private Value value;
+
+	public AddMealToMealPlanRequest(Integer slot, int position, String type, Value value) {
+		this.slot = slot;
+		this.position = position;
+		this.type = type;
+		this.value = value;
+	}
 }

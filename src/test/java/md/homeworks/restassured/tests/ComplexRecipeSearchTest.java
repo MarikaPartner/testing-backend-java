@@ -1,4 +1,4 @@
-package md.homeworks.restassured;
+package md.homeworks.restassured.tests;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,11 +10,12 @@ import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.path.json.JsonPath;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
+import md.homeworks.restassured.dto.ComplexRecipeSearchResponse;
+import md.homeworks.restassured.dto.ResultsItem;
 import md.homeworks.restassured.endpoints.SpoonEndpoints;
 import md.homeworks.restassured.extensions.SpoonApiTest;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -44,6 +45,7 @@ public class ComplexRecipeSearchTest {
     @DisplayName("Поиск без запроса")
     @Severity(SeverityLevel.CRITICAL)
     public void SearchRecipesHasNotQueryTest() {
+
         given()
                 .spec(requestSpecification)
                 .get(SpoonEndpoints.RECIPE_COMPLEXSEACH.getEndpoint())
@@ -53,7 +55,6 @@ public class ComplexRecipeSearchTest {
                 .body("results[0]", Matchers.hasKey("id"))
                 .body("results[0]", Matchers.hasKey("title"))
                 .body("results[0]", Matchers.hasKey("image"))
-                .body("results[0]", Matchers.hasKey("title"))
                 .body("results[0]", Matchers.hasKey("imageType"));
     }
 
@@ -76,7 +77,7 @@ public class ComplexRecipeSearchTest {
 
     @ParameterizedTest
     @DisplayName("Поиск по запросу: Запрос - фраза")
-    @CsvSource(value = {"tomato soup", "pasta with shrimp"})
+    @CsvSource(value = {"tomato soup", "pasta with chicken"})
     @Severity(SeverityLevel.CRITICAL)
     public void SearchRecipesQueryIsPhraseTest(String query) {
         JsonPath jsonPath = given()
@@ -93,24 +94,6 @@ public class ComplexRecipeSearchTest {
         for(String recipeTitle : recipeTitles) {
             assertThat(recipeTitle.toLowerCase()).contains(query.toLowerCase().split(" "));
         }
-    }
-
-    @ParameterizedTest
-    @Disabled
-    @DisplayName("Поиск по запросу: Запрос - фраза")
-    //@CsvSource(value = {"Tomato Soup", "pasta with shrimp"})
-    @CsvSource(value = {"Tomato Soup"})
-    @Severity(SeverityLevel.CRITICAL)
-    public void SearchRecipesQueryIsPhraseTest1(String query) {
-        given()
-                .queryParam("query", query)
-                .spec(requestSpecification)
-                .get(SpoonEndpoints.RECIPE_COMPLEXSEACH.getEndpoint())
-                .then()
-                .spec(responseSpecification)
-                .body("results", Matchers.hasSize(Matchers.not(0)))
-                //.body("results.title".toLowerCase(), Matchers.everyItem(Matchers.contains(query.toLowerCase().split(" "))));
-                .body("results[0].title.toLowerCase()", (Matchers.contains(query.toLowerCase().split(" "))));
     }
 
     @Test
@@ -167,5 +150,55 @@ public class ComplexRecipeSearchTest {
                 .body("results[0]", Matchers.hasKey("title"))
                 .body("results[0]", Matchers.hasKey("image"))
                 .body("results[0]", Matchers.hasKey("imageType"));
+    }
+
+    @ParameterizedTest
+    @DisplayName("Поиск рецептов по кухне")
+    @Severity(SeverityLevel.NORMAL)
+    @CsvSource(value = {"African", "American", "Chinese"," Japanese"})
+    public void SearchRecipesByCuisineTest(String cuisine) {
+        ComplexRecipeSearchResponse complexRecipeSearchResponse = given()
+                .queryParam("addRecipeInformation", true)
+                .queryParam("cuisine", cuisine)
+                .spec(requestSpecification)
+                .get(SpoonEndpoints.RECIPE_COMPLEXSEACH.getEndpoint())
+                .then()
+                .spec(responseSpecification)
+                .extract()
+                .as(ComplexRecipeSearchResponse.class);
+
+        List<List<String>> cuisines = complexRecipeSearchResponse.getResults().stream()
+                .map(resultsItem -> resultsItem.getCuisines())
+                .toList();
+
+        for (List<String> recipeCuisines: cuisines) {
+            assertThat(recipeCuisines).contains(cuisine);
+        }
+    }
+
+    @ParameterizedTest
+    @DisplayName("Поиск рецептов по типу питания")
+    @Severity(SeverityLevel.NORMAL)
+    @CsvSource(value = {"breakfast", "main course", "dessert"})
+    public void SearchRecipesByMealTypeTest(String mealType) {
+        ComplexRecipeSearchResponse complexRecipeSearchResponse = given()
+                .queryParam("addRecipeInformation", true)
+                .queryParam("type", mealType)
+                .spec(requestSpecification)
+                .get(SpoonEndpoints.RECIPE_COMPLEXSEACH.getEndpoint())
+                .then()
+                .spec(responseSpecification)
+                .extract()
+                .as(ComplexRecipeSearchResponse.class);
+
+        List<List<String>> dishTypes = complexRecipeSearchResponse.getResults().stream()
+                .map(resultsItem -> resultsItem.getDishTypes())
+                .toList();
+
+        System.out.println(dishTypes);
+
+        for (List<String> recipeMealTypes: dishTypes) {
+            assertThat(recipeMealTypes).contains(mealType);
+        }
     }
 }

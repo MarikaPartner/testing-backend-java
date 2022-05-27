@@ -7,7 +7,6 @@ import io.restassured.mapper.ObjectMapperType;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-import static md.homeworks.restassured.config.SpoonConfig.spoonConfig;
 
 public class CommonApiTestExtension implements BeforeAllCallback {
 

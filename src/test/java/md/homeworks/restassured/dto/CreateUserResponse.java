@@ -14,5 +14,4 @@ public class CreateUserResponse{
 	private String username;
 	private String spoonacularPassword;
 	private String hash;
-
 }

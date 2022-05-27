@@ -1,4 +1,4 @@
-package md.homeworks.restassured;
+package md.homeworks.restassured.tests;
 
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.builder.ResponseSpecBuilder;
@@ -10,7 +10,6 @@ import md.homeworks.restassured.extensions.SpoonApiTest;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import java.util.Map;
@@ -34,14 +33,14 @@ public class ClassifyCuisineTest {
                 .build();
     }
 
-    @Test
+    @ParameterizedTest
     @DisplayName( "Проверка ответа")
-    public void gettingResponseTest() {
+    @CsvSource(value = {"sushi"})
+    public void gettingResponseTest(String title) {
         given()
                 .spec(requestSpecification)
-                .formParams(Map.of("title", "sushi"))
+                .formParams(Map.of("title", title))
                 .post("/recipes/cuisine")
-                .prettyPeek()
                 .then()
                 .spec(responseSpecification)
                 .body("", Matchers.notNullValue())        // Проверяем, что тело ответа не пустое
@@ -52,12 +51,11 @@ public class ClassifyCuisineTest {
 
     @ParameterizedTest
     @DisplayName( "Проверка соответствия названия блюда кухне")
-    @CsvSource(value = {"sushi,Japanese","pizza,Mediterranean", "Cornish pasty,European", "falafel,Middle Eastern"})
+    @CsvSource(value = {"sushi,Japanese","pizza,Italian", "Cornish pasty,British", "falafel,Middle Eastern"})
     public void classificationByTitleTest(String mealTitle, String cuisine) {
         given()
                 .formParams(Map.of("title", mealTitle))
                 .post(SpoonEndpoints.RECIPES_CUISINE.getEndpoint())
-                .prettyPeek()
                 .then()
                 .spec(responseSpecification)
                 .body("", Matchers.notNullValue())

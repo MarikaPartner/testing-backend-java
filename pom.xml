@@ -15,6 +15,7 @@
     <aspectj.version>1.9.7</aspectj.version>
     <allure.version>2.16.1</allure.version>
     <jackson.version>2.13.2</jackson.version>
+    <retrofit.version>2.9.0</retrofit.version>
   </properties>
 
   <dependencies>
@@ -97,6 +98,19 @@
       <artifactId>jackson-annotations</artifactId>
       <version>${jackson.version}</version>
     </dependency>
+
+    <dependency>
+      <groupId>com.squareup.retrofit2</groupId>
+      <artifactId>retrofit</artifactId>
+      <version>${retrofit.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.squareup.retrofit2</groupId>
+      <artifactId>converter-jackson</artifactId>
+      <version>${retrofit.version}</version>
+    </dependency>
+
   </dependencies>
 
   <build>

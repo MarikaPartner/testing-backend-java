@@ -3,7 +3,6 @@ package md.homeworks.retrofit.test;
 import com.github.javafaker.Faker;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
-import lombok.Data;
 import lombok.SneakyThrows;
 import md.homeworks.retrofit.dto.CategoryDto;
 import md.homeworks.retrofit.dto.ProductDto;
@@ -12,12 +11,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import retrofit2.Response;
 import java.util.*;
+import java.util.stream.Collectors;
+
 import static md.homeworks.retrofit.util.RetrofitUtil.getCategoryService;
 import static md.homeworks.retrofit.util.RetrofitUtil.getProductsService;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Получение товаров категории по id (GET /api/v1/categories/{id})")
-@Data
 public class GetCategoryTest extends BaseTest {
     private static List<CategoryDto> categoryDtoList = new ArrayList<>();
     private static List<Integer> productDtoIdList = new ArrayList<>();
@@ -61,7 +61,7 @@ public class GetCategoryTest extends BaseTest {
         List<String> productTitles = getCategoryResponse.body().getProducts()
                 .stream()
                 .map(productDto -> productDto.getCategoryTitle())
-                .toList();
+                .collect(Collectors.toList());
         assertThat(productTitles).containsOnly(getCategoryResponse.body().getTitle());
 
         int productNumber = (categoryDtoList.stream()

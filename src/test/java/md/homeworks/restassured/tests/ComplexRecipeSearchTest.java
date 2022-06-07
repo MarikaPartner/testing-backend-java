@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @DisplayName("Поиск рецептов")
 @SpoonApiTest
@@ -169,7 +170,7 @@ public class ComplexRecipeSearchTest {
 
         List<List<String>> cuisines = complexRecipeSearchResponse.getResults().stream()
                 .map(resultsItem -> resultsItem.getCuisines())
-                .toList();
+                .collect(Collectors.toList());
 
         for (List<String> recipeCuisines: cuisines) {
             assertThat(recipeCuisines).contains(cuisine);
@@ -193,7 +194,7 @@ public class ComplexRecipeSearchTest {
 
         List<List<String>> dishTypes = complexRecipeSearchResponse.getResults().stream()
                 .map(resultsItem -> resultsItem.getDishTypes())
-                .toList();
+                .collect(Collectors.toList());
 
         System.out.println(dishTypes);
 

@@ -3,7 +3,6 @@ package md.homeworks.retrofit.test;
 import com.github.javafaker.Faker;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
-import lombok.Data;
 import lombok.SneakyThrows;
 import md.homeworks.retrofit.dto.ProductDto;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,7 +15,6 @@ import static md.homeworks.retrofit.util.RetrofitUtil.getProductsService;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Удаление товаров (DELETE /api/v1/products/{id})")
-@Data
 public class DeleteProductsTest extends BaseTest {
     private static ProductDto productDto;
     private List<Integer> productIdsBefore;

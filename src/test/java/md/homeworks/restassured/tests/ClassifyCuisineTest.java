@@ -34,7 +34,7 @@ public class ClassifyCuisineTest {
     }
 
     @ParameterizedTest
-    @DisplayName( "Проверка ответа")
+    @DisplayName("Проверка ответа")
     @CsvSource(value = {"sushi"})
     public void gettingResponseTest(String title) {
         given()

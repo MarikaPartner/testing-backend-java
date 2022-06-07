@@ -3,7 +3,6 @@ package md.homeworks.retrofit.test;
 import com.github.javafaker.Faker;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
-import lombok.Data;
 import lombok.SneakyThrows;
 import md.homeworks.retrofit.dto.ProductDto;
 import org.junit.jupiter.api.*;
@@ -13,7 +12,6 @@ import static md.homeworks.retrofit.util.RetrofitUtil.getProductsService;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Изменение продуктов (PUT /api/v1/products)")
-@Data
 public class ChangeProductsTest extends BaseTest {
     private ProductDto productDto;
     private Integer productId;
@@ -66,7 +64,7 @@ public class ChangeProductsTest extends BaseTest {
                 .stream()
                 .mapToInt(n -> n)
                 .max()
-                .getAsInt() + 1;
+                .orElseThrow() + 1;
         productDto.setId(nonExistentId);
 
         // Отправляем запрос на изменение товара с несуществующим id

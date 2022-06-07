@@ -7,6 +7,8 @@ import retrofit2.Response;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import static md.homeworks.retrofit.util.RetrofitUtil.getCategoryService;
 import static md.homeworks.retrofit.util.RetrofitUtil.getProductsService;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,7 +48,7 @@ public abstract class BaseTest {
                 .body()
                 .stream()
                 .map(product -> product.getId())
-                .toList();
+                .collect(Collectors.toList());
     }
 
     // Удалить товар из каталога

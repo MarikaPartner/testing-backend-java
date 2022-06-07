@@ -93,7 +93,7 @@ public class AddMealToMealPlanTest {
                 new AddMealToMealPlanRequest(unixTime, 2, 4, "PRODUCT", new Value(878207, 1,"Hot Dang Southwest Burger","jpeg")),
                 new AddMealToMealPlanRequest(unixTime, 1, 1, "PRODUCT", new Value(204593, 1,"Kemps Kemps Select Milk, 1 gl","jpeg")));
 
-        /* Подготовка тестовых данных через builder (заменила из-за громоздкости)
+        /*  Подготовка тестовых данных через builder (заменила из-за громоздкости)
         return Stream.of(AddMealToMealPlanRequest.builder()
                         .date(unixTime)
                         .slot(3)

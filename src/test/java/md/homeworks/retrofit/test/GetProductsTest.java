@@ -3,7 +3,6 @@ package md.homeworks.retrofit.test;
 import com.github.javafaker.Faker;
 import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
-import lombok.Data;
 import lombok.SneakyThrows;
 import md.homeworks.retrofit.dto.ProductDto;
 import org.junit.jupiter.api.DisplayName;
@@ -18,7 +17,6 @@ import static md.homeworks.retrofit.util.RetrofitUtil.getProductsService;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Получение списка всех товаров каталога (GET /api/v1/products)")
-@Data
 public class GetProductsTest extends BaseTest {
     private static List<ProductDto> productDtoList = new ArrayList<>();
     private static List<Integer> productDtoIdList = new ArrayList<>();
